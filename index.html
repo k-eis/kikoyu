@@ -312,6 +312,11 @@ progress::-moz-progress-bar{background:var(--accent)}
 #list .sug .why2{font-size:.72rem; color:var(--muted); margin-left:8px}
 #list .sug .acts{display:flex; gap:8px; margin-top:6px}
 #list .st{margin-top:4px; font-size:.74rem; color:var(--muted)}
+.step .grow{display:inline-flex; gap:18px; flex-wrap:wrap}
+.box3[hidden]{display:none}
+.pastebox{margin:0 0 14px}
+#pastetext{width:100%; font:inherit; font-size:.9rem; line-height:1.7; color:var(--ink); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px 12px; resize:vertical}
+#pastetext:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
 </style>
 </head>
 <body>
@@ -403,9 +408,20 @@ progress::-moz-progress-bar{background:var(--accent)}
   </div>
   <ol id="list" aria-label="文字起こし結果"></ol>
 
-  <h2 class="step"><b>2</b>直す<button class="linkbtn grow" id="load">保存した文字を読み込む</button></h2>
+  <h2 class="step"><b>2</b>直す<span class="grow"><button class="linkbtn" id="load">保存した文字を読み込む</button><button class="linkbtn" id="paste">文章を貼り付ける</button></span></h2>
   <input type="file" id="loadfile" hidden>
   <p class="stephint">文字起こしが終わったら、左から順に使います。</p>
+  <div class="box3 pastebox" id="pastebox" hidden>
+    <div class="ptitle">文章を貼り付けて取り込む<span>Word・Pages・メモなどの文章を、そのまま添削できます。</span></div>
+    <textarea id="pastetext" rows="6" placeholder="ここに文章を貼り付けてください" aria-label="貼り付ける文章"></textarea>
+    <div class="r3"><span class="lb">分け方</span>
+      <div class="seg" role="radiogroup" aria-label="分け方">
+        <label><input type="radio" name="psplit" value="line" checked><span>改行ごと</span></label>
+        <label><input type="radio" name="psplit" value="period"><span>「。」ごと</span></label>
+      </div>
+    </div>
+    <div class="fix"><button class="act primary" id="pasteok">取り込む</button><button class="act" id="pasteclose">とじる</button></div>
+  </div>
   <div class="fix">
     <button class="act primary" id="check" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>おかしな所を探す</span></button>
     <span class="arrow" aria-hidden="true">→</span>
@@ -952,6 +968,7 @@ function syncTools(){
   $("editmode").hidden = !editing;
   $("editcap").textContent = editing ? "直し終わり" : "文字を直す";
   $("load").disabled = busy;
+  $("paste").disabled = busy;
   const hasEn = segs.some((s) => s.en), hasDia = segs.some((s) => s.dia);
   const tg = val("tgt");
   $("tr").disabled = !has || busy;
@@ -1033,6 +1050,15 @@ function parseTxt(text){
     .map((l) => l.trim()).filter(Boolean)
     .map((l) => ({ start: null, end: null, text: l }));
 }
+function parsePaste(text, byPeriod){
+  const lines = parseTxt(text.normalize("NFC")).map((x) => x.text);
+  const out = [];
+  for (const line of lines){
+    const parts = byPeriod ? (line.match(/[^。！？!?]+[。！？!?]*/g) || [line]) : [line];
+    for (const x of parts){ const t = x.trim(); if (t) out.push({ start: null, end: null, text: t }); }
+  }
+  return out;
+}
 /* LOAD-END */
 
 $("load").addEventListener("click", () => { if (!busy) $("loadfile").click(); });
@@ -1058,6 +1084,24 @@ $("loadfile").addEventListener("change", async () => {
   segs = parsed; mode = "file"; editing = false;
   render(); resync();
   setStatus("「" + f.name + "」を読み込みました（" + segs.length + "行）。" + (parsed[0].start == null ? "時刻はありません。" : ""));
+});
+
+$("paste").addEventListener("click", () => {
+  if (busy) return;
+  const b = $("pastebox");
+  b.hidden = !b.hidden;
+  if (!b.hidden) $("pastetext").focus();
+});
+$("pasteclose").addEventListener("click", () => { $("pastebox").hidden = true; });
+$("pasteok").addEventListener("click", () => {
+  if (busy) return;
+  const parsed = parsePaste($("pastetext").value, val("psplit") === "period");
+  if (!parsed.length){ setStatus("貼り付ける文章が、空です。文章を貼り付けてから、押してください。", true); return; }
+  if (segs.length && !confirm("いま画面にある文字は、貼り付けた文章に置き換わります。よろしいですか？")) return;
+  segs = parsed; mode = "file"; editing = false;
+  render(); resync();
+  $("pastebox").hidden = true; $("pastetext").value = "";
+  setStatus("貼り付けた文章を取り込みました（" + segs.length + "行）。時刻はありません。");
 });
 
 /* ---- 英語にする（翻訳）・逆翻訳 ---- */
