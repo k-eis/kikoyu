@@ -250,6 +250,43 @@ progress::-moz-progress-bar{background:var(--accent)}
 .local progress{flex:1 1 140px; width:auto; margin:0}
 .tools{display:flex; flex-wrap:wrap; gap:10px}
 @media (prefers-reduced-motion: reduce){ .mini i, .dot, .act.busy::before{animation:none} .act{transition:none} }
+.tg{display:inline-block; font-size:.72rem; font-weight:400; padding:1px 9px; border-radius:99px; background:var(--line); color:var(--muted); margin-top:6px}
+.tg.play{background:rgba(220,196,142,.35); color:var(--ink); margin:0}
+.tg.blue{background:rgba(82,135,164,.16); color:var(--ink)}
+.box3{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:18px 20px; display:grid; gap:16px; margin:0 0 12px}
+.box3 .engine,.box3 .fix{margin:0}
+.r3{display:flex; align-items:flex-start; gap:12px; flex-wrap:wrap}
+.lb{width:4.2em; flex:none; font-size:.78rem; color:var(--muted); padding-top:7px}
+.ops{display:flex; gap:12px; flex:1 1 300px; flex-wrap:wrap}
+.op{position:relative; flex:1 1 220px; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:.8rem; color:var(--muted); line-height:1.6; cursor:pointer}
+.op b{display:block; font-size:.88rem; color:var(--ink); font-weight:500}
+.op input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer}
+.op:has(input:checked){border:1.5px solid var(--accent); padding:11.5px 13.5px; background:var(--tint)}
+.op:has(input:focus-visible){outline:2px solid var(--accent); outline-offset:2px}
+.oll{margin:12px 0 0 calc(4.2em + 12px); border:1px solid var(--line); border-radius:10px; padding:14px 16px; display:grid; gap:10px; font-size:.82rem}
+.oll .hint,#diahint{margin:0}
+#diahint{margin-top:12px}
+.ost{display:flex; align-items:center; gap:8px}
+.od{width:9px; height:9px; flex:none; border-radius:50%; background:var(--muted); opacity:.5}
+.od.ok{background:var(--sage); opacity:1}
+.od.ng{background:var(--clay); opacity:1}
+.orow{display:flex; align-items:center; flex-wrap:wrap; gap:10px}
+.orow .cap{font-size:.78rem; color:var(--muted)}
+.orow select{font:inherit; font-size:.82rem; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:6px 10px; max-width:100%}
+.act.sm{min-height:34px; padding:0 14px; font-size:.82rem; border-width:1px}
+.help summary{cursor:pointer; font-size:.82rem; text-decoration:underline; text-underline-offset:3px}
+.help ol{margin:10px 0 6px; padding-left:1.3em; display:grid; gap:6px; line-height:1.6}
+.help code{font-size:.78rem; background:var(--bg); padding:1px 6px; border-radius:4px; word-break:break-all}
+.seg label[hidden]{display:none}
+.act .i-dia{display:none}
+.act.dia .i-dia{display:block}
+.act.dia .i-en{display:none}
+.act.busy .i-dia,.act.busy .i-en{display:none}
+#list .dia{margin-top:4px; padding-left:10px; border-left:2px solid var(--clay); font-size:.92rem}
+#list .dia i{font-style:normal; font-size:.7rem; background:rgba(207,127,108,.2); border-radius:4px; padding:0 6px; margin-right:8px}
+@media (max-width:520px){ .oll{margin-left:0} }
+.notice{margin:10px 0 0; padding:6px 12px; border-left:3px solid var(--sand); background:rgba(220,196,142,.22); border-radius:0 8px 8px 0; font-size:.86rem; font-weight:500; line-height:1.6; color:var(--ink)}
+.notice.warn{border-left-color:var(--clay); background:rgba(207,127,108,.16)}
 </style>
 </head>
 <body>
@@ -262,6 +299,7 @@ progress::-moz-progress-bar{background:var(--accent)}
       <h1>Kiko<span>yu</span><small>きこゆ</small></h1>
       <p class="sub">ブラウザの中だけで動きます。動画・音声は外に送信されません。</p>
       <p class="sub2">そのぶん、精度はひかえめです。文字起こしの補助として、内容をご確認のうえお使いください。</p>
+      <p class="notice" id="chromenote">Chromeの機能を使うため、アプリも、聞き取りたい動画ページも、PCのChromeで開いてください。</p>
     </div>
   </header>
 
@@ -302,9 +340,8 @@ progress::-moz-progress-bar{background:var(--accent)}
     <div class="sgroup">
       <div class="cap">モデル</div>
       <div class="seg" role="radiogroup" aria-label="モデル">
-        <label><input type="radio" name="model" value="onnx-community/whisper-tiny"><span>速さ優先</span></label>
-        <label><input type="radio" name="model" value="onnx-community/whisper-base" checked><span>標準</span></label>
-        <label><input type="radio" name="model" value="onnx-community/whisper-small"><span>精度優先</span></label>
+        <label><input type="radio" name="model" value="onnx-community/whisper-base"><span>速さ優先</span></label>
+        <label><input type="radio" name="model" value="onnx-community/whisper-small" checked><span>標準</span></label>
       </div>
       <p class="hint" id="modelhint" aria-live="polite"></p>
     </div>
@@ -350,21 +387,62 @@ progress::-moz-progress-bar{background:var(--accent)}
     <button id="rbtn">全部置換</button>
   </div>
 
-  <h2 class="step"><b>3</b>英語にする<span class="opt">必要なときだけ</span></h2>
-  <div class="field engine">
-    <span>翻訳</span>
-    <div class="mwrap">
-      <div class="seg" role="radiogroup" aria-label="翻訳の方式">
-        <label><input type="radio" name="tengine" value="chrome" checked><span>Chrome（PC用）</span></label>
-        <label><input type="radio" name="tengine" value="local"><span>スマホ用</span></label>
+  <h2 class="step"><b>3</b>ことばを変える<span class="opt">必要なときだけ</span><span class="tg play">おあそびつき</span></h2>
+  <div class="box3">
+    <div class="r3"><span class="lb">変換先</span>
+      <div class="seg" role="radiogroup" aria-label="変換先">
+        <label><input type="radio" name="tgt" value="en" checked><span>英語</span></label>
+        <label><input type="radio" name="tgt" value="kansai"><span>関西弁</span></label>
+        <label><input type="radio" name="tgt" value="hakata"><span>博多弁</span></label>
+        <label><input type="radio" name="tgt" value="hiroshima"><span>広島弁</span></label>
+        <label><input type="radio" name="tgt" value="nagoya"><span>名古屋弁</span></label>
       </div>
-      <p class="hint" id="tenginehint" aria-live="polite"></p>
     </div>
-  </div>
-  <div class="fix">
-    <button class="act primary" id="tr" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.3 3.5 5 3.5 8s-1 5.7-3.5 8c-2.5-2.3-3.5-5-3.5-8s1-5.7 3.5-8z"/></svg><span id="trcap">英語にする</span></button>
-    <span class="arrow" aria-hidden="true">→</span>
-    <button class="act" id="back" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6L4 11l5 5M4 11h10a6 6 0 0 1 0 8h-4"/></svg><span id="backcap">逆翻訳で確認</span></button>
+
+    <div id="enbox">
+      <div class="field engine">
+        <span>翻訳</span>
+        <div class="mwrap">
+          <div class="seg" role="radiogroup" aria-label="翻訳の方式">
+            <label><input type="radio" name="tengine" value="chrome" checked><span>Chrome（PC用）</span></label>
+            <label><input type="radio" name="tengine" value="local"><span>スマホ用</span></label>
+          </div>
+          <p class="hint" id="tenginehint" aria-live="polite"></p>
+        </div>
+      </div>
+    </div>
+
+    <div id="diabox" hidden>
+      <div class="r3"><span class="lb">しかた</span>
+        <div class="ops">
+          <label class="op"><input type="radio" name="diamode" value="rule" checked><b>ざっくり</b>そのまま使えます。ルールで置き換えるので、ちょっと不自然になることも。<br><span class="tg">Ollama不要</span></label>
+          <label class="op"><input type="radio" name="diamode" value="ollama"><b>なめらか</b>自分のパソコンのOllamaを使います。文の意味をくみとって、自然に変えます。<br><span class="tg blue">Ollama・設定が必要</span></label>
+        </div>
+      </div>
+      <div class="oll" id="ollbox" hidden>
+        <div class="ost"><span class="od" id="odot"></span><span id="otext">まだ確認していません</span></div>
+        <div class="orow"><span class="cap">モデル</span>
+          <select id="omodel" aria-label="Ollamaのモデル"><option value="">（先に「つながりを確認」を押してください）</option></select>
+          <button class="act sm" id="ocheck">つながりを確認</button></div>
+        <p class="hint">文字は、あなたのパソコンの中のOllamaにだけ渡されます。外のサーバーには送られません。</p>
+        <details class="help"><summary>Ollamaの設定のしかた</summary>
+          <ol>
+            <li>Ollama（ollama.com）をパソコンに入れて、起動します。</li>
+            <li>ターミナルで、モデルを入れます。例：<code>ollama pull qwen2.5:7b</code></li>
+            <li>このページからの接続を許可します。環境変数 <code>OLLAMA_ORIGINS</code> に、このページのアドレス <code id="origin"></code> を設定して、Ollamaを起動し直します。<br>Macの例：<code id="macset"></code></li>
+            <li>上の「つながりを確認」を押します。Chromeで許可の確認が出たら、許可してください。</li>
+          </ol>
+          <p class="hint">Safariでは、つながらないことがあります。</p>
+        </details>
+      </div>
+      <p class="hint" id="diahint">方言の変換は、おあそびです。正確さは保証できません。地域や世代でも違います。仕事の資料などでは、変換前の文字をお使いください。</p>
+    </div>
+
+    <div class="fix">
+      <button class="act primary" id="tr" disabled><svg class="i-en" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.3 3.5 5 3.5 8s-1 5.7-3.5 8c-2.5-2.3-3.5-5-3.5-8s1-5.7 3.5-8z"/></svg><svg class="i-dia" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v9H10l-4 3v-3H4z"/></svg><span id="trcap">英語にする</span></button>
+      <span class="arrow" aria-hidden="true">→</span>
+      <button class="act" id="back" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6L4 11l5 5M4 11h10a6 6 0 0 1 0 8h-4"/></svg><span id="backcap">逆翻訳で確認</span></button>
+    </div>
   </div>
   <div class="local" id="trlocal" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="trtext"></span><progress id="trbar" max="100" value="0"></progress></div>
 
@@ -373,8 +451,10 @@ progress::-moz-progress-bar{background:var(--accent)}
     <span>出力</span>
     <div class="seg" role="radiogroup" aria-label="書き出す言語">
       <label><input type="radio" name="outlang" value="ja" checked><span>日本語</span></label>
-      <label><input type="radio" name="outlang" value="en"><span>英語</span></label>
-      <label><input type="radio" name="outlang" value="both"><span>日英</span></label>
+      <label data-need="en"><input type="radio" name="outlang" value="en"><span>英語</span></label>
+      <label data-need="en"><input type="radio" name="outlang" value="both"><span>日英</span></label>
+      <label data-need="dia"><input type="radio" name="outlang" value="dia"><span>方言</span></label>
+      <label data-need="dia"><input type="radio" name="outlang" value="jd"><span>日本語＋方言</span></label>
     </div>
   </div>
   <div class="tools">
@@ -383,7 +463,7 @@ progress::-moz-progress-bar{background:var(--accent)}
     <button class="act" id="dlsrt" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/></svg><span>字幕 .srt</span></button>
   </div>
 
-  <p class="note">初回はモデルのダウンロードが必要です（速さ優先 約40MB／標準 約80MB／精度優先 約250MB。2回目以降はキャッシュされます）。WebGPU対応のChromeだと速く動きます。行をクリックすると、その位置から再生します。</p>
+  <p class="note">初回はモデルのダウンロードが必要です（速さ優先 約80MB／標準 約250MB。2回目以降はキャッシュされます）。WebGPU対応のChromeだと速く動きます。行をクリックすると、その位置から再生します。</p>
   <p class="note">「タブの音声」：文字にしたい動画ページを別のタブで開いておき、このボタンを押して共有画面で「Chromeタブ」を選び、「タブの音声も共有」にチェックを入れて共有してください。動画を再生すると、15秒ごとにまとめて文字になります（Chromeのみ対応）。</p>
   <p class="note">個人で楽しむ範囲で、権利のある動画や、許可された動画にお使いください。再生しているサービスの利用規約もあわせてご確認ください。</p>
   <footer class="credit">
@@ -557,7 +637,7 @@ function render(){
       p.spellcheck = false;
       p.addEventListener("input", () => {
         s.text = p.textContent.replace(/\s*\n\s*/g, " ");
-        if (s.en || s.back){ s.en = s.back = null; cell.querySelectorAll(".en,.back").forEach((n) => n.remove()); }
+        if (s.en || s.back || s.dia){ s.en = s.back = s.dia = null; cell.querySelectorAll(".en,.back,.dia").forEach((n) => n.remove()); }
         if (s.flag){ s.flag = null; li.classList.remove("flag"); const w = cell.querySelector(".why"); if (w) w.remove(); }
       });
       p.addEventListener("keydown", (e) => { if (e.key === "Enter"){ e.preventDefault(); p.blur(); } });
@@ -566,6 +646,7 @@ function render(){
     cell.append(p);
     if (s.en){ const e = document.createElement("div"); e.className = "en"; e.textContent = s.en; cell.append(e); }
     if (s.back){ const b = document.createElement("div"); b.className = "back"; b.textContent = "逆翻訳：" + s.back; cell.append(b); }
+    if (s.dia){ const d = document.createElement("div"); d.className = "dia"; const ch = document.createElement("i"); ch.textContent = s.diaChip || ""; d.append(ch, document.createTextNode(s.dia)); cell.append(d); }
     if (s.flag){
       const w = document.createElement("small"); w.className = "why";
       w.textContent = "確認：" + s.flag; w.title = "クリックで確認済みにします";
@@ -607,17 +688,23 @@ videoEl.addEventListener("timeupdate", () => {
 videoEl.addEventListener("seeked", () => { activeIdx = -2; videoEl.dispatchEvent(new Event("timeupdate")); });
 
 const outMode = () => {
-  if (!segs.some((s) => s.en)) return "ja";
   const e = document.querySelector('input[name="outlang"]:checked');
-  return e ? e.value : "ja";
+  const m = e ? e.value : "ja";
+  const hasEn = segs.some((s) => s.en), hasDia = segs.some((s) => s.dia);
+  if ((m === "en" || m === "both") && !hasEn) return "ja";
+  if ((m === "dia" || m === "jd") && !hasDia) return "ja";
+  return m;
 };
 function outLines(s){
-  const m = outMode(), ja = s.text.trim(), en = (s.en || "").trim();
+  const m = outMode(), ja = s.text.trim(), en = (s.en || "").trim(), dia = (s.dia || "").trim();
   if (m === "en") return en ? [en] : [];
   if (m === "both") return [ja, en].filter(Boolean);
+  if (m === "dia") return dia ? [dia] : [];
+  if (m === "jd") return [ja, dia].filter(Boolean);
   return ja ? [ja] : [];
 }
-const suf = () => ({ ja: "", en: "-en", both: "-ja-en" })[outMode()];
+const diaKeyOf = () => { const x = segs.find((v) => v.diaKey); return x ? x.diaKey : "dialect"; };
+const suf = () => ({ ja: "", en: "-en", both: "-ja-en", dia: "-" + diaKeyOf(), jd: "-ja-" + diaKeyOf() })[outMode()];
 const plain = () => segs.flatMap(outLines).join("\n");
 function download(name, text){
   const a = document.createElement("a");
@@ -808,10 +895,14 @@ function syncTools(){
   $("editmode").hidden = !editing;
   $("editcap").textContent = editing ? "直し終わり" : "文字を直す";
   $("load").disabled = busy;
-  const hasEn = segs.some((s) => s.en);
+  const hasEn = segs.some((s) => s.en), hasDia = segs.some((s) => s.dia);
+  const tg = val("tgt");
   $("tr").disabled = !has || busy;
-  $("back").disabled = !hasEn || busy;
-  $("outsel").hidden = !hasEn;
+  $("back").disabled = (tg === "en" ? !hasEn : !hasDia) || busy;
+  $("outsel").hidden = !(hasEn || hasDia);
+  document.querySelectorAll('#outsel label[data-need]').forEach((l) => { l.hidden = l.dataset.need === "en" ? !hasEn : !hasDia; });
+  const cur = document.querySelector('input[name="outlang"]:checked');
+  if (cur && cur.closest("label").hidden) document.querySelector('input[name="outlang"][value="ja"]').checked = true;
 }
 function resync(){ activeIdx = -2; videoEl.dispatchEvent(new Event("timeupdate")); }
 
@@ -843,7 +934,7 @@ $("rbtn").addEventListener("click", () => {
   let n = 0;
   segs.forEach((s) => {
     const parts = s.text.split(f);
-    if (parts.length > 1){ n += parts.length - 1; s.text = parts.join(r); s.en = s.back = null; }
+    if (parts.length > 1){ n += parts.length - 1; s.text = parts.join(r); s.en = s.back = s.dia = null; }
   });
   render(); resync();
   setStatus(n ? n + "か所を置換しました。" : "見つかりませんでした。", !n);
@@ -952,7 +1043,7 @@ function paintLine(i){
   const cell = li.querySelector(".cell");
   if (!cell) return;
   const s = segs[i];
-  cell.querySelectorAll(".en,.back").forEach((n) => n.remove());
+  cell.querySelectorAll(".en,.back,.dia").forEach((n) => n.remove());
   const anchor = cell.querySelector(".why");
   const add = (cls, txt) => {
     const d = document.createElement("div"); d.className = cls; d.textContent = txt;
@@ -960,6 +1051,12 @@ function paintLine(i){
   };
   if (s.en) add("en", s.en);
   if (s.back) add("back", "逆翻訳：" + s.back);
+  if (s.dia){
+    const d = document.createElement("div"); d.className = "dia";
+    const ch = document.createElement("i"); ch.textContent = s.diaChip || "";
+    d.append(ch, document.createTextNode(s.dia));
+    if (anchor) cell.insertBefore(d, anchor); else cell.append(d);
+  }
 }
 
 async function runTranslate(kind){
@@ -1003,8 +1100,8 @@ async function runTranslate(kind){
     setBusy(false); render();
   }
 }
-$("tr").addEventListener("click", () => runTranslate("en"));
-$("back").addEventListener("click", () => runTranslate("back"));
+$("tr").addEventListener("click", () => (val("tgt") === "en" ? runTranslate("en") : runDialect()));
+$("back").addEventListener("click", () => (val("tgt") === "en" ? runTranslate("back") : clearDialect()));
 
 const TENGINE_HINT = {
   chrome: "Chromeに入っている翻訳機能を使います。精度優先・PC専用（初回に翻訳データをダウンロード）",
@@ -1029,10 +1126,187 @@ const dropEl = $("drop");
 dropEl.addEventListener("drop", (e) => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) acceptFile(f); });
 ["dragover", "drop"].forEach((ev) => window.addEventListener(ev, (e) => e.preventDefault()));
 
+/* ---- 方言モード（おあそび）：ざっくり（ルール）／なめらか（Ollama）---- */
+const DIA = {
+  kansai:    { label: "関西弁",   chip: "関" },
+  hakata:    { label: "博多弁",   chip: "博" },
+  hiroshima: { label: "広島弁",   chip: "広" },
+  nagoya:    { label: "名古屋弁", chip: "名" },
+};
+/* RULES-START */
+const END = "(?=[。！？!?」）\\s]|$)";
+const R = (arr) => arr.map(([p, r, e]) => [new RegExp(p + (e ? END : ""), "g"), r]);
+const RULES = {
+  kansai: R([
+    ["ありがとうございました", "おおきに"], ["ありがとうございます", "おおきに"],
+    ["本当に", "ほんまに"], ["本当", "ほんま"], ["とても", "めっちゃ"], ["すごく", "めっちゃ"], ["非常に", "めっちゃ"],
+    ["違います", "ちゃいます"], ["違う", "ちゃう"], ["ダメ", "あかん"], ["だめ", "あかん"], ["いけません", "あきません"],
+    ["しかし、", "せやけど、"], ["ですので", "やさかい"], ["ので、", "さかい、"],
+    ["そうですね", "そうやなあ"], ["そうです", "そうやで"], ["ですよね", "やんな"], ["ですね", "やなあ"], ["でしょう", "やろ"], ["だろう", "やろ"],
+    ["ていません", "てへん"], ["ていない", "てへん"], ["ていました", "とったで"], ["ています", "とるで"], ["ている", "とる"],
+    ["ではありません", "やないで"], ["ではない", "やない"], ["じゃない", "ちゃう"],
+    ["でした", "やったで", 1], ["ました", "ましたわ", 1], ["だった", "やった", 1], ["です", "やで", 1], ["ます", "ますわ", 1], ["ません", "ませんわ", 1], ["だ", "や", 1],
+  ]),
+  hakata: R([
+    ["本当に", "ほんなこつ"], ["本当", "ほんなこつ"], ["とても", "ばり"], ["すごく", "ばり"], ["非常に", "ばり"],
+    ["しかし、", "ばってん、"], ["けれども", "ばってん"], ["けれど", "ばってん"], ["ですので", "やけん"], ["ので、", "けん、"],
+    ["そうですね", "そうやね"], ["でしょう", "やろ"], ["だろう", "やろ"],
+    ["ていません", "よらん"], ["ていました", "よりました"], ["ています", "よります"], ["ている", "よる"], ["ていた", "よった"],
+    ["ダメ", "いかん"], ["だめ", "いかん"],
+    ["ですか(?=[？?])", "と"],
+    ["でした", "やったばい", 1], ["ました", "ましたばい", 1], ["ですよ", "ばい", 1], ["です", "ばい", 1], ["だよ", "ばい", 1], ["ます", "ますばい", 1], ["ません", "ませんばい", 1], ["だ", "たい", 1],
+  ]),
+  hiroshima: R([
+    ["本当に", "ほんまに"], ["とても", "ぶち"], ["すごく", "ぶち"], ["非常に", "ぶち"],
+    ["しかし、", "じゃけど、"], ["ですので", "じゃけえ"], ["ので、", "けえ、"],
+    ["そうですね", "そうじゃのう"], ["ですね", "じゃのう"], ["でしょう", "じゃろう"], ["だろう", "じゃろう"],
+    ["ていません", "とりません"], ["ていない", "とらん"], ["ていました", "とったんよ"], ["ています", "とるんよ"], ["ている", "とる"], ["ていた", "とった"],
+    ["いけません", "いけんよ"], ["ダメ", "いけん"], ["だめ", "いけん"],
+    ["でした", "じゃった", 1], ["ました", "ましたけえ", 1], ["ですよ", "じゃけえね", 1], ["です", "じゃ", 1], ["だった", "じゃった", 1], ["ます", "ますけえ", 1], ["ません", "ませんけえ", 1], ["だ", "じゃ", 1],
+  ]),
+  nagoya: R([
+    ["本当に", "ほんにゃあ"], ["とても", "でら"], ["すごく", "でら"], ["非常に", "でら"],
+    ["しかし、", "ほんでも、"], ["それで", "ほんで"], ["だから", "だもんで"], ["ですので", "だもんで"], ["ので、", "もんで、"],
+    ["そうですね", "そうだなも"], ["ですね", "だなも"], ["でしょう", "だらあ"], ["だろう", "だらあ"],
+    ["ていません", "とらんがね"], ["ていました", "とったがね"], ["ています", "とるがね"], ["ている", "とる"], ["ていた", "とった"],
+    ["ダメ", "いかん"], ["だめ", "いかん"],
+    ["でした", "だったがね", 1], ["ました", "ましたがね", 1], ["ですよ", "だでよ", 1], ["です", "だがね", 1], ["だった", "だったがね", 1], ["ます", "ますがね", 1], ["ません", "ませんがね", 1], ["だ", "だがや", 1],
+  ]),
+};
+function ruleConvert(key, text){
+  let t = text;
+  for (const [re, rep] of RULES[key]) t = t.replace(re, rep);
+  return t;
+}
+/* RULES-END */
+
+const OLLAMA = "http://localhost:11434";
+async function ollamaFetch(path, body, ms){
+  const ac = new AbortController();
+  const timer = setTimeout(() => ac.abort(), ms || 90000);
+  try {
+    const r = await fetch(OLLAMA + path, {
+      method: body ? "POST" : "GET",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body: body ? JSON.stringify(body) : undefined,
+      signal: ac.signal,
+    });
+    if (!r.ok) throw new Error("Ollamaが " + r.status + " を返しました。モデルの名前や、許可の設定を確認してください。");
+    return await r.json();
+  } finally { clearTimeout(timer); }
+}
+function ollamaErr(e){
+  if (e && e.name === "AbortError") return "Ollamaの返事に時間がかかりすぎました。モデルを小さいものにするか、もう一度試してください。";
+  if (e && e.name === "TypeError") return "Ollamaにつながりません。Ollamaが起動しているか、このページからの接続を許可しているかを、確認してください（「Ollamaの設定のしかた」）。";
+  return (e && e.message) ? e.message : String(e);
+}
+
+function makeOllamaConv(key){
+  const model = $("omodel").value;
+  if (!model) throw new Error("Ollamaのモデルを選んでください。「つながりを確認」を押すと、一覧が出ます。");
+  const sys = "あなたは日本語の方言変換の専門家です。入力された日本語の文を、" + DIA[key].label + "の話し言葉に書き換えてください。意味・固有名詞・数字・専門用語は変えないでください。出力は、変換後の文だけにしてください。説明、前置き、括弧、引用符は付けないでください。";
+  return async (text) => {
+    const j = await ollamaFetch("/api/chat", {
+      model, stream: false, options: { temperature: 0.6 },
+      messages: [{ role: "system", content: sys }, { role: "user", content: text }],
+    });
+    let out = ((j.message && j.message.content) || "").trim().split("\n")[0].trim();
+    out = out.replace(/^[「『"“]/, "").replace(/[」』"”]$/, "").trim();
+    return out || text;
+  };
+}
+
+async function runDialect(){
+  if (busy) return;
+  const key = val("tgt"), d = DIA[key], mode = val("diamode");
+  const targets = [];
+  segs.forEach((s, i) => { if (s.text.trim()) targets.push(i); });
+  if (!targets.length) return;
+  setBusy(true); render();
+  const btn = $("tr"), cap = $("trcap"), capOld = cap.textContent;
+  btn.classList.add("busy"); cap.textContent = d.label + "にしています…";
+  trActive = true; $("trlocal").hidden = false; $("trbar").value = 0;
+  try {
+    const conv = mode === "ollama" ? makeOllamaConv(key) : async (t) => ruleConvert(key, t);
+    let n = 0;
+    for (const i of targets){
+      const s = segs[i];
+      s.dia = ((await conv(s.text)) || "").trim() || s.text;
+      s.diaKey = key; s.diaChip = d.chip;
+      paintLine(i);
+      n++;
+      setBar((n / targets.length) * 100);
+      setStatus(d.label + "にしています… " + n + " / " + targets.length);
+      if (mode === "rule") await new Promise((r) => setTimeout(r, 0));
+    }
+    setBar(null);
+    setStatus(d.label + "にしました。おあそびです。変換前の文字は、そのまま残っています。");
+  } catch (e){
+    console.error(e);
+    setBar(null);
+    setStatus("エラー：" + ollamaErr(e), true);
+  } finally {
+    trActive = false; $("trlocal").hidden = true;
+    btn.classList.remove("busy"); cap.textContent = capOld;
+    setBusy(false); render();
+  }
+}
+function clearDialect(){
+  if (busy) return;
+  segs.forEach((s) => { s.dia = null; s.diaKey = null; s.diaChip = null; });
+  render(); resync();
+  setStatus("方言を元にもどしました。");
+}
+
+function syncTarget(){
+  const tg = val("tgt"), en = tg === "en";
+  $("enbox").hidden = !en;
+  $("diabox").hidden = en;
+  $("ollbox").hidden = en || val("diamode") !== "ollama";
+  $("tr").classList.toggle("dia", !en);
+  $("trcap").textContent = en ? "英語にする" : DIA[tg].label + "にする";
+  $("backcap").textContent = en ? "逆翻訳で確認" : "元にもどす";
+  syncTools();
+}
+document.querySelectorAll('input[name="tgt"], input[name="diamode"]').forEach((r) => r.addEventListener("change", syncTarget));
+$("origin").textContent = location.origin === "null" ? "（このページのアドレス）" : location.origin;
+$("macset").textContent = 'launchctl setenv OLLAMA_ORIGINS "' + (location.origin === "null" ? "このページのアドレス" : location.origin) + '"';
+$("ocheck").addEventListener("click", async () => {
+  const dot = $("odot"), txt = $("otext");
+  dot.className = "od"; txt.textContent = "確認しています…";
+  try {
+    const j = await ollamaFetch("/api/tags", null, 8000);
+    const names = (j.models || []).map((m) => m.name);
+    const sel = $("omodel"), keep = sel.value;
+    sel.innerHTML = "";
+    if (!names.length){
+      sel.append(new Option("（モデルが入っていません）", ""));
+      dot.className = "od ng";
+      txt.textContent = "つながりましたが、モデルが入っていません。ターミナルで、モデルを入れてください（例：ollama pull qwen2.5:7b）。";
+      return;
+    }
+    names.forEach((n) => sel.append(new Option(n, n)));
+    const pick = [/qwen/i, /gemma/i, /swallow|elyza/i, /llama/i].map((re) => names.find((n) => re.test(n))).find(Boolean);
+    sel.value = names.includes(keep) ? keep : (pick || names[0]);
+    dot.className = "od ok";
+    txt.textContent = "つながっています（モデル " + names.length + " 件）";
+  } catch (e){
+    dot.className = "od ng";
+    txt.textContent = ollamaErr(e);
+  }
+});
+syncTarget();
+
+/* ---- Chrome以外のとき、お願いの文を目立たせる ---- */
+if (!(/Chrome\//.test(navigator.userAgent) && !/Mobi|Android/i.test(navigator.userAgent))){
+  const cn = $("chromenote");
+  cn.classList.add("warn");
+  cn.textContent = "このブラウザ・端末では、使えない機能があります。PCのChromeで開くのがおすすめです。";
+}
+
 /* ---- モデルの説明 ---- */
 const MODEL_HINT = {
-  "onnx-community/whisper-tiny": "いちばん速い・精度はひかえめ（tiny・初回 約40MB）",
-  "onnx-community/whisper-base": "速さと精度のバランス型（base・初回 約80MB）",
+  "onnx-community/whisper-base": "速めに動きます・精度はひかえめ（base・初回 約80MB）",
   "onnx-community/whisper-small": "時間はかかるけど精度が高い（small・初回 約250MB）",
 };
 const showHint = () => { $("modelhint").textContent = MODEL_HINT[val("model")] || ""; };
