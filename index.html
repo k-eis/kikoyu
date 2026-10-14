@@ -285,8 +285,33 @@ progress::-moz-progress-bar{background:var(--accent)}
 #list .dia{margin-top:4px; padding-left:10px; border-left:2px solid var(--clay); font-size:.92rem}
 #list .dia i{font-style:normal; font-size:.7rem; background:rgba(207,127,108,.2); border-radius:4px; padding:0 6px; margin-right:8px}
 @media (max-width:520px){ .oll{margin-left:0} }
-.notice{margin:10px 0 0; padding:6px 12px; border-left:3px solid var(--sand); background:rgba(220,196,142,.22); border-radius:0 8px 8px 0; font-size:.86rem; font-weight:500; line-height:1.6; color:var(--ink)}
-.notice.warn{border-left-color:var(--clay); background:rgba(207,127,108,.16)}
+.notice{margin:0; font-size:.82rem; line-height:1.6; color:var(--muted)}
+.notice.warn{color:var(--ink); font-weight:500}
+.gorow{display:flex; align-items:center; gap:10px 18px; flex-wrap:wrap}
+.gostat{display:inline-flex; align-items:center; gap:10px; font-size:.78rem; color:var(--muted); min-width:0}
+.gostat[hidden]{display:none}
+.gostat > span:last-child{max-width:16em; line-height:1.4}
+.sugbar{display:inline-flex; align-items:center; gap:10px; margin-left:auto; flex-wrap:wrap}
+.sugbar[hidden]{display:none}
+.sugcount{margin:0; background:rgba(143,176,154,.3); color:var(--ink)}
+.act.sm.primary{border-width:1px}
+.proofbox{margin-top:14px}
+.ptitle{font-size:.92rem; font-weight:500}
+.ptitle span{font-size:.78rem; font-weight:400; color:var(--muted); margin-left:10px}
+.chs{display:flex; flex-wrap:wrap; gap:8px; flex:1 1 300px}
+.ch{position:relative; display:inline-flex; align-items:center; font-size:.8rem; padding:4px 12px; border:1px solid var(--line); border-radius:99px; color:var(--muted); cursor:pointer}
+.ch input{position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer}
+.ch:has(input:checked){border-color:var(--accent); color:var(--ink); background:var(--tint)}
+.ch:has(input:checked)::before{content:"✓"; margin-right:6px}
+.ch:has(input:focus-visible){outline:2px solid var(--accent); outline-offset:2px}
+#list .sug{margin-top:6px; padding-left:10px; border-left:2px solid var(--sage)}
+#list .sug.rm{border-left-color:var(--clay)}
+#list .sug .df{font-size:.92rem}
+#list .sug .df del{background:rgba(207,127,108,.22); text-decoration:line-through; color:var(--muted); border-radius:3px; padding:0 1px}
+#list .sug .df ins{background:rgba(143,176,154,.35); text-decoration:none; border-radius:3px; padding:0 1px}
+#list .sug .why2{font-size:.72rem; color:var(--muted); margin-left:8px}
+#list .sug .acts{display:flex; gap:8px; margin-top:6px}
+#list .st{margin-top:4px; font-size:.74rem; color:var(--muted)}
 </style>
 </head>
 <body>
@@ -314,10 +339,13 @@ progress::-moz-progress-bar{background:var(--accent)}
         <div class="fname" id="fname">未選択</div>
       </div>
       <div class="spacer"></div>
-      <button class="go file" id="start" disabled>
-        <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></i>
-        <span>文字にする</span>
-      </button>
+      <div class="gorow">
+        <button class="go file" id="start" disabled>
+          <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></i>
+          <span>文字にする</span>
+        </button>
+        <span class="gostat" id="fstat" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="fstattext"></span></span>
+      </div>
     </section>
     <section class="card tab" id="tabcard">
       <h3>ページの音声</h3>
@@ -328,10 +356,13 @@ progress::-moz-progress-bar{background:var(--accent)}
       </ol>
       <p class="lead" id="tabwhy" hidden>この機能は、PCのChromeで使えます。</p>
       <div class="spacer"></div>
-      <button class="go tab" id="live">
-        <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg></i>
-        <span id="livecap">聞き取りを始める</span>
-      </button>
+      <div class="gorow">
+        <button class="go tab" id="live">
+          <i><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h2M8 8v8M12 5v14M16 8v8M20 12h-2"/></svg></i>
+          <span id="livecap">聞き取りを始める</span>
+        </button>
+        <span class="gostat" id="lstat" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="lstattext"></span></span>
+      </div>
     </section>
   </div>
 
@@ -368,6 +399,7 @@ progress::-moz-progress-bar{background:var(--accent)}
   <div class="rhead">
     <h2 class="rtitle">文字起こしの結果</h2>
     <span class="work" id="work" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="worktext"></span></span>
+    <span class="sugbar" id="sugbar" hidden><span class="tg sugcount" id="sugcount"></span><button class="act sm primary" id="sugall">ぜんぶ採用</button><button class="act sm" id="sugnone">ぜんぶ元のまま</button></span>
   </div>
   <ol id="list" aria-label="文字起こし結果"></ol>
 
@@ -385,6 +417,21 @@ progress::-moz-progress-bar{background:var(--accent)}
     <span aria-hidden="true">→</span>
     <input id="rwith" type="text" placeholder="正しい言葉" aria-label="正しい言葉">
     <button id="rbtn">全部置換</button>
+  </div>
+
+  <div class="box3 proofbox">
+    <div class="ptitle">お任せで直す<span>直し方を提案します。採用するまで、元の文字は変わりません。</span></div>
+    <div class="r3"><span class="lb">直す内容</span>
+      <div class="chs">
+        <label class="ch"><input type="checkbox" id="po-rep" checked><span>繰り返しをまとめる</span></label>
+        <label class="ch"><input type="checkbox" id="po-hall" checked><span>無音で出やすい一文を消す</span></label>
+        <label class="ch"><input type="checkbox" id="po-sym" checked><span>記号だけの行を消す</span></label>
+        <label class="ch"><input type="checkbox" id="po-dot" checked><span>文末に「。」をつける</span></label>
+        <label class="ch"><input type="checkbox" id="po-fill"><span>「えーと」「あのー」を取る</span></label>
+      </div>
+    </div>
+    <div class="fix"><button class="act primary" id="proof" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg><span>お任せで直す</span></button></div>
+    <p class="hint" style="margin:0">決まったルールで、明らかなゴミを片づけます。聞き間違いの言葉までは、直せません。</p>
   </div>
 
   <h2 class="step"><b>3</b>ことばを変える<span class="opt">必要なときだけ</span><span class="tg play">おあそびつき</span></h2>
@@ -442,6 +489,7 @@ progress::-moz-progress-bar{background:var(--accent)}
       <button class="act primary" id="tr" disabled><svg class="i-en" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.3 3.5 5 3.5 8s-1 5.7-3.5 8c-2.5-2.3-3.5-5-3.5-8s1-5.7 3.5-8z"/></svg><svg class="i-dia" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v9H10l-4 3v-3H4z"/></svg><span id="trcap">英語にする</span></button>
       <span class="arrow" aria-hidden="true">→</span>
       <button class="act" id="back" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6L4 11l5 5M4 11h10a6 6 0 0 1 0 8h-4"/></svg><span id="backcap">逆翻訳で確認</span></button>
+      <span class="gostat" id="tstat" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="tstattext"></span></span>
     </div>
   </div>
   <div class="local" id="trlocal" hidden><span class="mini" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span id="trtext"></span><progress id="trbar" max="100" value="0"></progress></div>
@@ -479,7 +527,7 @@ const videoEl = $("video"), listEl = $("list");
 const SR = 16000, WIN = 30 * SR;
 
 let currentFile = null, segs = [], asr = null, asrKey = "", busy = false, objUrl = null, mode = "file";
-let trActive = false;
+let trActive = false, statTarget = null;
 function setBusy(b){
   busy = b; if (b) editing = false;
   $("screen").classList.toggle("working", b);
@@ -499,7 +547,8 @@ function setBusy(b){
 function setStatus(msg, isErr = false){
   statusEl.textContent = msg; statusEl.classList.toggle("err", isErr);
   if (busy) $("worktext").textContent = msg;
-  if (trActive) $("trtext").textContent = msg;
+  if (trActive){ $("trtext").textContent = msg; $("tstattext").textContent = msg; }
+  if (statTarget) $(statTarget + "text").textContent = msg;
 }
 function setBar(v){
   if (trActive && v != null) $("trbar").value = v;
@@ -580,6 +629,7 @@ async function loadModel(modelId){
 startEl.addEventListener("click", async () => {
   if (!currentFile || busy) return;
   setBusy(true); startEl.disabled = true; $("live").disabled = true; mode = "file";
+  statTarget = "fstat"; $("fstat").hidden = false; $("fstattext").textContent = "";
   segs = []; render();
   try {
     const model = await loadModel(val("model"));
@@ -612,6 +662,7 @@ startEl.addEventListener("click", async () => {
     setBar(null);
     setStatus("エラー：" + (e && e.message ? e.message : e) + "（動画に音声トラックがあるか、ブラウザが対応形式か確認してください）", true);
   } finally {
+    $("fstat").hidden = true; statTarget = null;
     setBusy(false); startEl.disabled = false; $("live").disabled = !tabOK;
   }
 });
@@ -638,6 +689,7 @@ function render(){
       p.addEventListener("input", () => {
         s.text = p.textContent.replace(/\s*\n\s*/g, " ");
         if (s.en || s.back || s.dia){ s.en = s.back = s.dia = null; cell.querySelectorAll(".en,.back,.dia").forEach((n) => n.remove()); }
+        if (s.sug || s.mark){ s.sug = null; s.mark = null; cell.querySelectorAll(".sug,.st").forEach((n) => n.remove()); syncTools(); }
         if (s.flag){ s.flag = null; li.classList.remove("flag"); const w = cell.querySelector(".why"); if (w) w.remove(); }
       });
       p.addEventListener("keydown", (e) => { if (e.key === "Enter"){ e.preventDefault(); p.blur(); } });
@@ -647,6 +699,8 @@ function render(){
     if (s.en){ const e = document.createElement("div"); e.className = "en"; e.textContent = s.en; cell.append(e); }
     if (s.back){ const b = document.createElement("div"); b.className = "back"; b.textContent = "逆翻訳：" + s.back; cell.append(b); }
     if (s.dia){ const d = document.createElement("div"); d.className = "dia"; const ch = document.createElement("i"); ch.textContent = s.diaChip || ""; d.append(ch, document.createTextNode(s.dia)); cell.append(d); }
+    if (s.sug) cell.append(buildSug(s));
+    if (s.mark){ const m = document.createElement("div"); m.className = "st"; m.textContent = s.mark; cell.append(m); }
     if (s.flag){
       const w = document.createElement("small"); w.className = "why";
       w.textContent = "確認：" + s.flag; w.title = "クリックで確認済みにします";
@@ -851,6 +905,7 @@ liveEl.addEventListener("click", async () => {
     return;
   }
   liveOn = true; setBusy(true); mode = "live";
+  statTarget = "lstat"; $("lstat").hidden = false; $("lstattext").textContent = "";
   segs = []; render();
   startEl.disabled = true;
   liveEl.classList.add("on"); liveCap.textContent = "停止";
@@ -862,6 +917,7 @@ liveEl.addEventListener("click", async () => {
     setBar(null);
     setStatus("エラー：" + (e && e.message ? e.message : e), true);
   } finally {
+    $("lstat").hidden = true; statTarget = null;
     setBusy(false); liveOn = false; live = null;
     liveEl.classList.remove("on"); liveCap.textContent = "聞き取りを始める";
     startEl.disabled = !currentFile;
@@ -898,6 +954,9 @@ function syncTools(){
   const hasEn = segs.some((s) => s.en), hasDia = segs.some((s) => s.dia);
   const tg = val("tgt");
   $("tr").disabled = !has || busy;
+  $("proof").disabled = !has || busy;
+  const nsug = segs.filter((x) => x.sug).length;
+  $("sugbar").hidden = !nsug; $("sugcount").textContent = nsug + "件の提案";
   $("back").disabled = (tg === "en" ? !hasEn : !hasDia) || busy;
   $("outsel").hidden = !(hasEn || hasDia);
   document.querySelectorAll('#outsel label[data-need]').forEach((l) => { l.hidden = l.dataset.need === "en" ? !hasEn : !hasDia; });
@@ -1044,7 +1103,7 @@ function paintLine(i){
   if (!cell) return;
   const s = segs[i];
   cell.querySelectorAll(".en,.back,.dia").forEach((n) => n.remove());
-  const anchor = cell.querySelector(".why");
+  const anchor = cell.querySelector(".why,.sug,.st");
   const add = (cls, txt) => {
     const d = document.createElement("div"); d.className = cls; d.textContent = txt;
     if (anchor) cell.insertBefore(d, anchor); else cell.append(d);
@@ -1072,7 +1131,7 @@ async function runTranslate(kind){
   setBusy(true); render();
   const btn = $(kind === "en" ? "tr" : "back"), cap = $(kind === "en" ? "trcap" : "backcap"), capOld = cap.textContent;
   btn.classList.add("busy"); cap.textContent = kind === "en" ? "英語にしています…" : "日本語に戻しています…";
-  trActive = true; $("trlocal").hidden = false; $("trbar").value = 0;
+  trActive = true; $("trlocal").hidden = false; $("tstat").hidden = false; $("tstattext").textContent = ""; $("trbar").value = 0;
   try {
     const fn = await getTranslator(engine, kind === "en" ? "ja-en" : "en-ja");
     setBar(null);
@@ -1095,7 +1154,7 @@ async function runTranslate(kind){
     setBar(null);
     setStatus("エラー：" + (e && e.message ? e.message : e), true);
   } finally {
-    trActive = false; $("trlocal").hidden = true;
+    trActive = false; $("trlocal").hidden = true; $("tstat").hidden = true;
     btn.classList.remove("busy"); cap.textContent = capOld;
     setBusy(false); render();
   }
@@ -1225,7 +1284,7 @@ async function runDialect(){
   setBusy(true); render();
   const btn = $("tr"), cap = $("trcap"), capOld = cap.textContent;
   btn.classList.add("busy"); cap.textContent = d.label + "にしています…";
-  trActive = true; $("trlocal").hidden = false; $("trbar").value = 0;
+  trActive = true; $("trlocal").hidden = false; $("tstat").hidden = false; $("tstattext").textContent = ""; $("trbar").value = 0;
   try {
     const conv = mode === "ollama" ? makeOllamaConv(key) : async (t) => ruleConvert(key, t);
     let n = 0;
@@ -1246,7 +1305,7 @@ async function runDialect(){
     setBar(null);
     setStatus("エラー：" + ollamaErr(e), true);
   } finally {
-    trActive = false; $("trlocal").hidden = true;
+    trActive = false; $("trlocal").hidden = true; $("tstat").hidden = true;
     btn.classList.remove("busy"); cap.textContent = capOld;
     setBusy(false); render();
   }
@@ -1303,6 +1362,98 @@ if (!(/Chrome\//.test(navigator.userAgent) && !/Mobi|Android/i.test(navigator.us
   cn.classList.add("warn");
   cn.textContent = "このブラウザ・端末では、使えない機能があります。PCのChromeで開くのがおすすめです。";
 }
+
+/* ---- お任せで直す（ざっくり）：提案をつくって、人が選ぶ ---- */
+/* PROOF-START */
+const FILL = /(?:えーっと|えーと|えっと|あのー|あのう|そのー|うーん|えー(?=[、，]))[、，]?/g;
+function proofSeg(s, prev, o){
+  const orig = s.text, n = norm(orig.trim());
+  let t = orig.trim();
+  const reasons = [];
+  if (o.sym && n.length <= 1) return { del: true, reasons: ["記号や1文字だけの行"] };
+  if (o.hall && n.length <= 24 && HALLU.some((h) => t.includes(h))) return { del: true, reasons: ["無音や音楽で出やすい一文"] };
+  if (o.rep && prev && norm(prev.text) === n) return { del: true, reasons: ["前の行と同じ"] };
+  if (o.rep){ const c = t.replace(/(.{2,}?)\1{2,}/g, "$1"); if (c !== t){ t = c; reasons.push("同じ言葉の繰り返し"); } }
+  if (o.fill){ const c = t.replace(FILL, "").replace(/^[、，\s]+/, ""); if (c !== t){ t = c; reasons.push("言い淀み"); } }
+  if (!t.trim()) return { del: true, reasons: reasons.length ? reasons : ["中身のない行"] };
+  if (o.dot && /[\u3040-\u30ff\u3400-\u9fff]/.test(t) && !/[。！？!?」）』．.…~〜]$/.test(t)){ t += "。"; reasons.push("文末の句点"); }
+  if (t === orig) return null;
+  return { text: t, reasons };
+}
+function diffOps(a, b){
+  const A = Array.from(a), B = Array.from(b);
+  const ops = [];
+  const push = (type, ch) => { const l = ops[ops.length - 1]; if (l && l.type === type) l.t += ch; else ops.push({ type, t: ch }); };
+  if (A.length * B.length > 250000){
+    let i = 0; while (i < A.length && i < B.length && A[i] === B[i]) i++;
+    let j = 0; while (j < A.length - i && j < B.length - i && A[A.length - 1 - j] === B[B.length - 1 - j]) j++;
+    if (i) push("same", A.slice(0, i).join(""));
+    if (A.length - i - j) push("del", A.slice(i, A.length - j).join(""));
+    if (B.length - i - j) push("ins", B.slice(i, B.length - j).join(""));
+    if (j) push("same", A.slice(A.length - j).join(""));
+    return ops;
+  }
+  const dp = Array.from({ length: A.length + 1 }, () => new Uint16Array(B.length + 1));
+  for (let i = A.length - 1; i >= 0; i--) for (let j = B.length - 1; j >= 0; j--)
+    dp[i][j] = A[i] === B[j] ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  let i = 0, j = 0;
+  while (i < A.length && j < B.length){
+    if (A[i] === B[j]){ push("same", A[i]); i++; j++; }
+    else if (dp[i + 1][j] >= dp[i][j + 1]){ push("del", A[i]); i++; }
+    else { push("ins", B[j]); j++; }
+  }
+  while (i < A.length){ push("del", A[i]); i++; }
+  while (j < B.length){ push("ins", B[j]); j++; }
+  return ops;
+}
+/* PROOF-END */
+
+function buildSug(s){
+  const g = s.sug, box = document.createElement("div");
+  box.className = "sug" + (g.del ? " rm" : "");
+  const df = document.createElement("div"); df.className = "df";
+  if (g.del) df.textContent = "この行を消すことを提案します";
+  else for (const op of diffOps(s.text, g.text)){
+    const el = document.createElement(op.type === "del" ? "del" : op.type === "ins" ? "ins" : "span");
+    el.textContent = op.t; df.append(el);
+  }
+  const why = document.createElement("small"); why.className = "why2"; why.textContent = "（" + g.reasons.join("・") + "）";
+  df.append(why);
+  const acts = document.createElement("div"); acts.className = "acts";
+  const ok = document.createElement("button"); ok.className = "act sm primary"; ok.textContent = g.del ? "消す" : "採用";
+  const no = document.createElement("button"); no.className = "act sm"; no.textContent = g.del ? "残す" : "そのまま";
+  ok.addEventListener("click", (e) => { e.stopPropagation(); applySug(s); render(); resync(); });
+  no.addEventListener("click", (e) => { e.stopPropagation(); s.sug = null; s.mark = "✓ 元のままにしました"; render(); resync(); });
+  acts.append(ok, no);
+  box.append(df, acts);
+  return box;
+}
+function applySug(s){
+  const g = s.sug; if (!g) return;
+  if (g.del){ const i = segs.indexOf(s); if (i >= 0) segs.splice(i, 1); }
+  else { s.text = g.text; s.en = s.back = s.dia = null; s.mark = "✓ 採用しました"; }
+  s.sug = null;
+}
+$("proof").addEventListener("click", () => {
+  if (busy) return;
+  const o = { rep: $("po-rep").checked, hall: $("po-hall").checked, sym: $("po-sym").checked, fill: $("po-fill").checked, dot: $("po-dot").checked };
+  let n = 0;
+  segs.forEach((s, i) => { s.mark = null; s.sug = proofSeg(s, segs[i - 1], o); if (s.sug) n++; });
+  render(); resync();
+  setStatus(n ? n + "件の提案があります。見比べて、「採用」か「そのまま」を選んでください。" : "直す提案は、見つかりませんでした。");
+  const li = listEl.querySelector("li .sug");
+  if (li) listEl.scrollTo({ top: Math.max(0, li.closest("li").offsetTop - listEl.offsetTop - 8) });
+});
+$("sugall").addEventListener("click", () => {
+  [...segs].filter((x) => x.sug).forEach(applySug);
+  render(); resync();
+  setStatus("提案を、すべて採用しました。");
+});
+$("sugnone").addEventListener("click", () => {
+  segs.forEach((x) => { x.sug = null; });
+  render(); resync();
+  setStatus("提案を、すべて元のままにしました。");
+});
 
 /* ---- モデルの説明 ---- */
 const MODEL_HINT = {
