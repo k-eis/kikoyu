@@ -404,7 +404,7 @@ progress::-moz-progress-bar{background:var(--accent)}
   <ol id="list" aria-label="文字起こし結果"></ol>
 
   <h2 class="step"><b>2</b>直す<button class="linkbtn grow" id="load">保存した文字を読み込む</button></h2>
-  <input type="file" id="loadfile" accept=".srt,.txt,text/plain" hidden>
+  <input type="file" id="loadfile" hidden>
   <p class="stephint">文字起こしが終わったら、左から順に使います。</p>
   <div class="fix">
     <button class="act primary" id="check" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>おかしな所を探す</span></button>
@@ -480,6 +480,7 @@ progress::-moz-progress-bar{background:var(--accent)}
             <li>上の「つながりを確認」を押します。Chromeで許可の確認が出たら、許可してください。</li>
           </ol>
           <p class="hint">Safariでは、つながらないことがあります。</p>
+          <p class="hint">Ollamaで使うモデルは、それぞれのライセンスに従います。使う前に、各モデルのページで確認してください。</p>
         </details>
       </div>
       <p class="hint" id="diahint">方言の変換は、おあそびです。正確さは保証できません。地域や世代でも違います。仕事の資料などでは、変換前の文字をお使いください。</p>
@@ -515,7 +516,7 @@ progress::-moz-progress-bar{background:var(--accent)}
   <p class="note">「タブの音声」：文字にしたい動画ページを別のタブで開いておき、このボタンを押して共有画面で「Chromeタブ」を選び、「タブの音声も共有」にチェックを入れて共有してください。動画を再生すると、15秒ごとにまとめて文字になります（Chromeのみ対応）。</p>
   <p class="note">個人で楽しむ範囲で、権利のある動画や、許可された動画にお使いください。再生しているサービスの利用規約もあわせてご確認ください。</p>
   <footer class="credit">
-    <p>文字起こし：<a href="https://github.com/openai/whisper" target="_blank" rel="noopener noreferrer">OpenAI Whisper</a>（MIT License, © OpenAI）／ 実行：<a href="https://github.com/huggingface/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>（Apache-2.0）／ 翻訳：Chromeの内蔵翻訳、または<a href="https://huggingface.co/Helsinki-NLP" target="_blank" rel="noopener noreferrer">Helsinki-NLP OPUS-MT</a>（CC BY 4.0／Apache-2.0）。ライセンスの詳細は、各リンク先をご確認ください。</p>
+    <p>文字起こし：<a href="https://github.com/openai/whisper" target="_blank" rel="noopener noreferrer">OpenAI Whisper</a>（MIT License, © OpenAI）／ 実行：<a href="https://github.com/huggingface/transformers.js" target="_blank" rel="noopener noreferrer">Transformers.js</a>（Apache-2.0）／ 翻訳：Chromeの内蔵翻訳、または<a href="https://huggingface.co/Helsinki-NLP" target="_blank" rel="noopener noreferrer">Helsinki-NLP OPUS-MT</a>（CC BY 4.0／Apache-2.0）／ 連携（任意）：<a href="https://ollama.com" target="_blank" rel="noopener noreferrer">Ollama</a>（MIT License。Kikoyuには含まれていません）。ライセンスの詳細は、各リンク先をご確認ください。</p>
   </footer>
 </main>
 
@@ -1001,24 +1002,34 @@ $("rbtn").addEventListener("click", () => {
 
 /* ---- 保存した .srt / .txt を読み込み直す ---- */
 /* LOAD-START */
-function srtSec(h, m, sec, ms){ return (+h) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000; }
+function srtSec(h, m, sec, ms){ return (+h || 0) * 3600 + (+m) * 60 + (+sec) + (+ms) / 1000; }
+async function readTextFile(f){
+  const buf = await f.arrayBuffer();
+  let t;
+  try { t = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+  catch (e1){
+    try { t = new TextDecoder("shift_jis").decode(buf); }
+    catch (e2){ t = new TextDecoder().decode(buf); }
+  }
+  return t.normalize("NFC");
+}
 function parseSrt(text){
   const out = [];
-  const re = /(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)/;
-  const blocks = text.replace(/^\uFEFF/, "").replace(/\r/g, "").split(/\n{2,}/);
+  const re = /(?:(\d+):)?(\d+):(\d+)[,.](\d+)\s*-->\s*(?:(\d+):)?(\d+):(\d+)[,.](\d+)/;
+  const blocks = text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").split(/\n{2,}/);
   for (const b of blocks){
     const lines = b.split("\n");
     const i = lines.findIndex((l) => re.test(l));
     if (i < 0) continue;
     const m = lines[i].match(re);
-    const txt = lines.slice(i + 1).join(" ").trim();
+    const txt = lines.slice(i + 1).join(" ").replace(/<[^>]+>/g, "").trim();
     if (!txt) continue;
     out.push({ start: srtSec(m[1], m[2], m[3], m[4]), end: srtSec(m[5], m[6], m[7], m[8]), text: txt });
   }
   return out;
 }
 function parseTxt(text){
-  return text.replace(/^\uFEFF/, "").replace(/\r/g, "").split("\n")
+  return text.replace(/^\uFEFF/, "").replace(/\r\n?/g, "\n").split("\n")
     .map((l) => l.trim()).filter(Boolean)
     .map((l) => ({ start: null, end: null, text: l }));
 }
@@ -1030,13 +1041,17 @@ $("loadfile").addEventListener("change", async () => {
   const f = inp.files[0];
   inp.value = "";
   if (!f || busy) return;
+  if (/\.(docx?|pdf|xlsx?|pptx?|pages|numbers|key|rtf|odt)$/i.test(f.name)){
+    setStatus("「" + f.name + "」は、読み込めない形式です。テキスト（.txt）や字幕（.srt）に保存し直してから、選んでください。", true);
+    return;
+  }
   let text;
-  try { text = await f.text(); }
+  try { text = await readTextFile(f); }
   catch { setStatus("ファイルを読めませんでした。", true); return; }
-  const isSrt = /\.srt$/i.test(f.name) || /-->/.test(text);
+  const isSrt = /\.(srt|vtt)$/i.test(f.name) || /-->/.test(text);
   const parsed = isSrt ? parseSrt(text) : parseTxt(text);
   if (!parsed.length){
-    setStatus("読み込める文字が見つかりませんでした。UTF-8形式の .srt か .txt を選んでください。", true);
+    setStatus("読み込める文字が見つかりませんでした。テキスト形式のファイル（.txt・.srt など）を選んでください。", true);
     return;
   }
   if (segs.length && !confirm("いま画面にある文字は、読み込んだ内容に置き換わります。よろしいですか？")) return;
